@@ -12,8 +12,6 @@ from classes.Client import *
 from classes.Net import *
 from classes.Utilities import *
 
-from playground import EPSILON, DELTA
-
 
 throughput = 0.0
 
@@ -175,11 +173,7 @@ def run_client_server(env, conf, net, loggers):
     env.run(until=env.stop_sim_event)  # Run until the stop_sim_event is triggered.
     print("> Main part of simulation finished. Starting cooldown phase.")
 
-    #extra add SID
-    total_noise = sum(node.total_noise() for node in net.mixnodes) 
-    print(f"Total Noise generated in this round --- {total_noise}")
-    report_total_noise(EPSILON, DELTA, total_noise)
-
+    # Log entropy
     loggers[2].info(StructuredMessage(metadata=tuple(env.entropy)))
     # ------ RUNNING THE COOLDOWN PHASE ----------
     env.run(until=env.now + conf["phases"]["cooldown"])
@@ -207,11 +201,7 @@ def run_client_server(env, conf, net, loggers):
     print("Total number of packets which went through the network: ", float(env.total_messages_received))
     print("Network throughput %f / second: " % throughput)
     print("Average mix throughput %f / second, with std: %f" % (np.mean(mixthroughputs), np.std(mixthroughputs)))
-    
 
-def report_total_noise(epsilon,delta,total_noise):
-    from metrics import anonymity_metrics
-    anonymity_metrics.log_privacy_metrics(epsilon, delta, total_noise)
 
 def flush_logs(loggers):
     for l in loggers:

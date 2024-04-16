@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 epsilon_list =[]
 delta_list = [] 
+latency_list = []
 
 EPSILON = 1
 DELTA = 1e-4
@@ -72,10 +73,10 @@ def main():
 
     # report_cumulative_noise()
 
-    with open('values.txt', 'a') as f:
-        f.write(str(round(float(unlinkability[0]),4)) + ',')
+    with open('valueslatency.txt', 'a') as f:
+        f.write(str(round(float(latency),4)) + ',')
 
-    return float(unlinkability[0])
+    return float(latency)
     
 if __name__ == "__main__":
    main()

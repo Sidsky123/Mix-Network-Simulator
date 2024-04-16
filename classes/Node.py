@@ -3,24 +3,11 @@ import math
 import numpy as np
 from classes.Packet import Packet
 from classes.Message import Message
-from metrics import anonymity_metrics
 import random
-from playground import EPSILON, DELTA
-
-
-# def generate_laplace_noise(self, epsilon, sensitivity):
-#     """Generate Laplace noise based on epsilon and sensitivity."""
-#     scale = sensitivity / epsilon
-#     return int(round(laplace.rvs(scale=scale)))
 
 class Node(object):
 
     def __init__(self, env, conf, net=None, label=0, loggers=None, id=None):
-
-        """ List for noise calculation"""
-        self.noise_contributions = []
-        self.epsilon = EPSILON
-        self.delta = DELTA
 
         self.env = env
         self.conf = conf
@@ -63,18 +50,6 @@ class Node(object):
         self.batch_num = 0
         self.free_to_batch = True
 
-    def generate_gaussian_noise(self, epsilon, delta):
-        """Generate Gaussian noise based on epsilon, delta, and sensitivity."""
-        sigma = np.sqrt(2 * np.log(1.25 / delta)) * (1 / epsilon)
-        noise = np.random.normal(0, sigma)
-        return noise
-    
-    def report_cumulative_noise(self):
-        total_noise = sum(self.noise_contributions)
-        anonymity_metrics.log_privacy_metrics(EPSILON, DELTA, total_noise)
-
-    def total_noise(self):
-        return sum(self.noise_contributions)
 
     def start(self, dest):
         ''' Main client method; It sends packets out.
@@ -117,29 +92,16 @@ class Node(object):
             delays = []
             while True:
                 if self.alive:
-                    # print("Cover Traffic Switched ON")
                     if delays == []:
                         delays = list(np.random.exponential(self.cover_traffic_rate, 10000))
 
                     delay = delays.pop()
                     yield self.env.timeout(float(delay))
-                    
-                    # Adjust the number of dummy packets based on Gaussian noise
-                    noise_adjustment = self.generate_gaussian_noise(self.epsilon, self.delta)
-                    num_dummy_packets = max(1 + int(round(noise_adjustment)), 1)  # Ensure at least one packet is sent
-                    print(f"Noise dummy packets currently added ---- {num_dummy_packets} ---- and gaussian noise was {noise_adjustment} ")
-                    self.noise_contributions.append(num_dummy_packets)
 
-                    for _ in range(num_dummy_packets):
-                        cover_loop_packet = Packet.dummy(conf=self.conf, net=self.net, dest=self, sender=self)
-                        cover_loop_packet.time_queued = self.env.now
-                        self.send_packet(cover_loop_packet)
-                        self.env.total_messages_sent += 1
-
-                    # cover_loop_packet = Packet.dummy(conf=self.conf, net = self.net, dest=self, sender=self)
-                    # cover_loop_packet.time_queued = self.env.now
-                    # self.send_packet(cover_loop_packet)
-                    # self.env.total_messages_sent += 1
+                    cover_loop_packet = Packet.dummy(conf=self.conf, net = self.net, dest=self, sender=self)
+                    cover_loop_packet.time_queued = self.env.now
+                    self.send_packet(cover_loop_packet)
+                    self.env.total_messages_sent += 1
                 else:
                     break
         else:
@@ -148,6 +110,7 @@ class Node(object):
     def send_packet(self, packet):
         ''' Methods sends a packet into the network,
          and logs information about the sending.
+​
             Keyword arguments:
             packet - an object of class Packet which is sent into the network.
         '''

@@ -7,7 +7,7 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 from playground import *
 
-mixnodes_list = [1,3,5,7,9,10]
+mixnodes_list = [3,5,7,9]
 unlinkability_list =[]
 open("values.txt", "w").close()
 
@@ -15,7 +15,7 @@ for i in mixnodes_list:
     with open('test_config2.json','r') as json_file:
         config = json.load(json_file)
         config["network"]["topology"] = "cascade"
-        config["mixnodes"]["avg_delay"] = 0.5
+        config["mixnodes"]["avg_delay"] = 0.1
         config["mixnodes"]["batch"] = True
         config["cover_traffic"] = True
         print("done reading 1 2 3")
@@ -29,13 +29,14 @@ for i in mixnodes_list:
     print("Current val is" + str(current_val))
 
 
-with open ('values.txt','r') as file:
-    unlinkability_list = (file.read().split(','))
-unlinkability_list.pop()
-print(unlinkability_list)
+with open ('valueslatency.txt','r') as file:
+    latency_list = (file.read().split(','))
+latency_list.pop()
+print(latency_list)
 
-unlinkability_list = [float(i) for i in unlinkability_list]
-plt.plot(mixnodes_list, unlinkability_list, color = 'Red')
+latency_list = [float(i) for i in latency_list]
+plt.plot(mixnodes_list, latency_list, color = 'Green')
 plt.xlabel('Number of Mixnodes')
-plt.ylabel('Epsilon')
-plt.savefig('Plots_Cascade_CoverTrafficOn_BatchOn_AvgDelay0.5.png')
+plt.ylabel('Latency')
+plt.title("Latency with different number of nodes without DP noise")
+plt.savefig('Plots_Cascade_CoverTrafficOn_BatchOn_Unlinkability.png')
