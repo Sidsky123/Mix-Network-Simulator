@@ -63,6 +63,9 @@ class Node(object):
         self.batch_num = 0
         self.free_to_batch = True
 
+    def get_packets_sent(self):
+        return self.pkts_sent
+
     def generate_gaussian_noise(self, epsilon, delta):
         """Generate Gaussian noise based on epsilon, delta, and sensitivity."""
         sigma = np.sqrt(2 * np.log(1.25 / delta)) * (1 / epsilon)
@@ -127,7 +130,7 @@ class Node(object):
                     # Adjust the number of dummy packets based on Gaussian noise
                     noise_adjustment = self.generate_gaussian_noise(self.epsilon, self.delta)
                     num_dummy_packets = max(1 + int(round(noise_adjustment)), 1)  # Ensure at least one packet is sent
-                    print(f"Noise dummy packets currently added ---- {num_dummy_packets} ---- and gaussian noise was {noise_adjustment} ")
+                    # print(f"Noise dummy packets currently added ---- {num_dummy_packets} ---- and gaussian noise was {noise_adjustment} ")
                     self.noise_contributions.append(num_dummy_packets)
 
                     for _ in range(num_dummy_packets):
@@ -155,7 +158,7 @@ class Node(object):
         packet.time_sent = self.env.now
         packet.current_node = -1  # If it's a retransmission this needs to be reset
         packet.times_transmitted += 1
-
+        
         if packet.type == "REAL" and packet.message.time_sent is None:
             packet.message.time_sent = packet.time_sent
 

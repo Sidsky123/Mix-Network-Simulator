@@ -17,6 +17,32 @@ from playground import EPSILON, DELTA
 
 throughput = 0.0
 
+def dp_verification_test(env, conf, net, epsilon, delta, loggers, num_trials=100):
+    client_outputs_with = []
+    client_outputs_without = []
+
+    for _ in range(num_trials):
+        env_with = simpy.Environment()
+        net_with = Network(env_with, conf['network']['topology'], conf, loggers)
+        test_client = random.choice(list(net_with.clients.values()))
+        env_with.process(run_client_server(env_with, conf, net_with, loggers))
+        env_with.run(until=100)
+        output_with = test_client.get_packets_sent()  # Fetching packets sent by the test client
+
+        env_without = simpy.Environment()
+        net_without = Network(env_without, conf['network']['topology'], conf, loggers)
+        net_without.clients.pop(test_client.id, None)  # Remove the test client
+        env_without.process(run_client_server(env_without, conf, net_without, loggers))
+        env_without.run(until=100)
+        output_without = test_client.get_packets_sent() if test_client.id in net_without.clients else 0
+
+        client_outputs_with.append(output_with)
+        client_outputs_without.append(output_without)
+
+    kl_divergence = compute_kl_divergence(client_outputs_with, client_outputs_without)
+    print("KL Divergence: ", kl_divergence)
+    loggers.entropy_logger.info(f"DP Test KL Divergence: {kl_divergence}")
+
 def get_loggers(log_dir, conf):
 
     packet_logger = setup_logger('simulation.packet', os.path.join(log_dir, 'packet_log.csv'))
@@ -249,3 +275,5 @@ def run(exp_dir, conf_file=None, conf_dic=None):
         run_p2p(env, conf, net, loggers)
     else:
         run_client_server(env, conf, net, loggers)
+
+    dp_verification_test(env, conf, net, EPSILON, DELTA, loggers, num_trials=100)
